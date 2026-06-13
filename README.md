@@ -2,6 +2,8 @@
 
 Static GitHub Pages status page for a Counter-Strike 1.6 Zombie Mod server.
 
+https://solpadoin.github.io/CS1.6-ZM-WEBSITE/
+
 ## What It Shows
 
 - Server name
