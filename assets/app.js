@@ -181,9 +181,16 @@ function renderStatus() {
 
   const img = $("mapImage");
   const url = mapImageUrl(map);
+  img.classList.remove("is-missing");
+  img.alt = `Preview for ${map}`;
+  img.onload = () => {
+    img.classList.remove("is-missing");
+    $("mapCaption").textContent = map;
+  };
   img.src = url;
   img.onerror = () => {
     img.removeAttribute("src");
+    img.classList.add("is-missing");
     img.alt = "No image for current map";
     $("mapCaption").textContent = "NO IMAGE";
   };

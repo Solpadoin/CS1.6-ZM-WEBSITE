@@ -21,7 +21,15 @@
       <div class="status-pill" id="serverState">SYNC</div>
     </header>
 
-    <section class="hero">
+    <section class="hero status-map-panel">
+      <figure class="map-panel">
+        <img id="mapImage" alt="Current map preview">
+        <figcaption>
+          <span id="mapCaption">NO IMAGE</span>
+          <a id="mapSource" href="#" target="_blank" rel="noreferrer">map source</a>
+        </figcaption>
+      </figure>
+
       <div class="server-card">
         <div class="metric">
           <span>Online</span>
@@ -40,14 +48,6 @@
           <strong id="updatedAt">never</strong>
         </div>
       </div>
-
-      <figure class="map-panel">
-        <img id="mapImage" alt="Current map preview">
-        <figcaption>
-          <span id="mapCaption">NO IMAGE</span>
-          <a id="mapSource" href="#" target="_blank" rel="noreferrer">map source</a>
-        </figcaption>
-      </figure>
     </section>
 
     <section class="panel monitor-panel">
