@@ -73,7 +73,7 @@ function formatTime(value) {
 
 function formatBytes(value) {
   const bytes = Number(value || 0);
-  const units = ["B", "MB", "GB", "TB"];
+  const units = ["B", "KB", "MB", "GB", "TB"];
   let size = bytes;
   let unit = 0;
 
