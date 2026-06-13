@@ -1,0 +1,5 @@
+[
+  { "name": "Solpadoin", "team": "TERRORIST", "alive": true, "bot": false },
+  { "name": "ZM Hunter", "team": "CT", "alive": true, "bot": true },
+  { "name": "Night Camper", "team": "TERRORIST", "alive": false, "bot": false }
+]

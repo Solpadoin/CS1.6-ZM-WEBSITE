@@ -1,0 +1,9 @@
+{
+  "online": false,
+  "hostname": "CS 1.6 Zombie Mod",
+  "map": "unknown",
+  "players_online": 0,
+  "players_max": 32,
+  "round_state": "waiting",
+  "updated_at": 0
+}

@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CS 1.6 ZM Server</title>
+  <meta name="description" content="Live status page for a Counter-Strike 1.6 Zombie Mod server.">
+  <link rel="preconnect" href="https://image.gametracker.com">
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+  <div class="space"></div>
+  <div class="scanline"></div>
+
+  <main class="shell">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Counter-Strike 1.6 / Zombie Mod</p>
+        <h1 id="serverName">Loading server...</h1>
+      </div>
+      <div class="status-pill" id="serverState">SYNC</div>
+    </header>
+
+    <section class="hero">
+      <div class="server-card">
+        <div class="metric">
+          <span>Online</span>
+          <strong><b id="onlinePlayers">0</b>/<b id="maxPlayers">0</b></strong>
+        </div>
+        <div class="metric">
+          <span>Map</span>
+          <strong id="currentMap">unknown</strong>
+        </div>
+        <div class="metric">
+          <span>Round</span>
+          <strong id="roundState">waiting</strong>
+        </div>
+        <div class="metric">
+          <span>Updated</span>
+          <strong id="updatedAt">never</strong>
+        </div>
+      </div>
+
+      <figure class="map-panel">
+        <img id="mapImage" alt="Current map preview">
+        <figcaption>
+          <span id="mapCaption">NO IMAGE</span>
+          <a id="mapSource" href="#" target="_blank" rel="noreferrer">map source</a>
+        </figcaption>
+      </figure>
+    </section>
+
+    <section class="grid">
+      <article class="panel players-panel">
+        <div class="panel-head">
+          <h2>Players</h2>
+          <span id="playersCount">0 connected</span>
+        </div>
+        <div class="players-list" id="playersList"></div>
+      </article>
+
+      <article class="panel chat-panel">
+        <div class="panel-head">
+          <h2>Chat</h2>
+          <span>last 30 minutes</span>
+        </div>
+        <div class="chat-log" id="chatLog"></div>
+      </article>
+    </section>
+
+    <section class="panel events-panel">
+      <div class="panel-head">
+        <h2>Server Events</h2>
+        <span id="eventCount">0 events</span>
+      </div>
+      <div class="events-list" id="eventsList"></div>
+    </section>
+  </main>
+
+  <script src="config.js"></script>
+  <script src="assets/app.js"></script>
+</body>
+</html>

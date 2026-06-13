@@ -1,0 +1,5 @@
+[
+  { "time": 1781330000, "type": "map_start", "detail": "zm_2day_2" },
+  { "time": 1781330060, "type": "client_connected", "detail": "Solpadoin" },
+  { "time": 1781330300, "type": "round_start", "detail": "Round started" }
+]
