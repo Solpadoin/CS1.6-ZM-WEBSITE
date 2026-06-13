@@ -1,0 +1,15 @@
+{
+  "updated_at": 0,
+  "cpu": {
+    "model": "unknown CPU",
+    "cores": 0,
+    "load_percent": 0,
+    "load_average": [0, 0, 0]
+  },
+  "memory": {
+    "total_bytes": 0,
+    "used_bytes": 0,
+    "free_bytes": 0,
+    "used_percent": 0
+  }
+}

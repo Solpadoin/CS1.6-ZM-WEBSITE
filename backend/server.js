@@ -3,6 +3,7 @@
 const fs = require("fs");
 const http = require("http");
 const crypto = require("crypto");
+const os = require("os");
 const path = require("path");
 
 const port = Number(process.env.ZM_WEB_PORT || 8080);
@@ -18,10 +19,12 @@ const files = {
   status: "server_status.json",
   players: "players.json",
   chat: "chat.json",
-  events: "events.json"
+  events: "events.json",
+  system: "system.json"
 };
 
 let lastSignature = "";
+let previousCpu = readCpuTimes();
 let snapshot = readSnapshot();
 const clients = new Set();
 
@@ -36,12 +39,89 @@ function readJson(file, fallback) {
 }
 
 function readSnapshot() {
+  const system = readSystemSnapshot();
+  writeSystemSnapshot(system);
+
   return {
     status: readJson(files.status, { online: false, updated_at: Math.floor(Date.now() / 1000) }),
     players: readJson(files.players, []),
     chat: readJson(files.chat, []),
-    events: readJson(files.events, [])
+    events: readJson(files.events, []),
+    system
   };
+}
+
+function readCpuTimes() {
+  try {
+    const line = fs.readFileSync("/proc/stat", "utf8").split("\n")[0];
+    const parts = line.trim().split(/\s+/).slice(1).map(Number);
+    const idle = parts[3] + (parts[4] || 0);
+    const total = parts.reduce((sum, value) => sum + value, 0);
+    return { idle, total };
+  } catch (error) {
+    const cpus = os.cpus();
+    const totals = cpus.reduce((acc, cpu) => {
+      const times = cpu.times;
+      acc.idle += times.idle;
+      acc.total += times.user + times.nice + times.sys + times.idle + times.irq;
+      return acc;
+    }, { idle: 0, total: 0 });
+    return totals;
+  }
+}
+
+function readMemoryInfo() {
+  try {
+    const raw = fs.readFileSync("/proc/meminfo", "utf8");
+    const values = Object.fromEntries(raw.split("\n").map((line) => {
+      const match = line.match(/^([^:]+):\s+(\d+)/);
+      return match ? [match[1], Number(match[2]) * 1024] : null;
+    }).filter(Boolean));
+    const total = values.MemTotal || os.totalmem();
+    const available = values.MemAvailable || os.freemem();
+    return { total, available };
+  } catch (error) {
+    return { total: os.totalmem(), available: os.freemem() };
+  }
+}
+
+function readSystemSnapshot() {
+  const currentCpu = readCpuTimes();
+  const totalDelta = currentCpu.total - previousCpu.total;
+  const idleDelta = currentCpu.idle - previousCpu.idle;
+  const cpuPercent = totalDelta > 0
+    ? Math.max(0, Math.min(100, (1 - idleDelta / totalDelta) * 100))
+    : 0;
+  previousCpu = currentCpu;
+
+  const memory = readMemoryInfo();
+  const used = Math.max(0, memory.total - memory.available);
+  const cpu = os.cpus()[0] || { model: "unknown" };
+
+  return {
+    updated_at: Math.floor(Date.now() / 1000),
+    cpu: {
+      model: cpu.model,
+      cores: os.cpus().length,
+      load_percent: Number(cpuPercent.toFixed(1)),
+      load_average: os.loadavg().map((value) => Number(value.toFixed(2)))
+    },
+    memory: {
+      total_bytes: memory.total,
+      used_bytes: used,
+      free_bytes: memory.available,
+      used_percent: memory.total > 0 ? Number(((used / memory.total) * 100).toFixed(1)) : 0
+    }
+  };
+}
+
+function writeSystemSnapshot(system) {
+  try {
+    fs.mkdirSync(dataDir, { recursive: true });
+    fs.writeFileSync(path.join(dataDir, files.system), JSON.stringify(system, null, 2));
+  } catch (error) {
+    // The live snapshot still works even if the fallback file cannot be written.
+  }
 }
 
 function signSnapshot(next) {
@@ -84,6 +164,11 @@ const server = http.createServer((request, response) => {
 
   if (requestUrl.pathname === "/snapshot") {
     sendJson(response, 200, snapshot);
+    return;
+  }
+
+  if (requestUrl.pathname === "/system") {
+    sendJson(response, 200, snapshot.system || readSystemSnapshot());
     return;
   }
 

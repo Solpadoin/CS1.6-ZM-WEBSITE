@@ -50,6 +50,31 @@
       </figure>
     </section>
 
+    <section class="panel monitor-panel">
+      <div class="panel-head">
+        <h2>Server Load</h2>
+        <span id="systemUpdated">never</span>
+      </div>
+      <div class="monitor-grid">
+        <div class="load-card">
+          <div class="load-top">
+            <span>CPU</span>
+            <strong><b id="cpuUsed">0</b>%</strong>
+          </div>
+          <div class="load-sub" id="cpuInfo">0 cores</div>
+          <canvas id="cpuChart" width="420" height="110" aria-label="CPU usage graph"></canvas>
+        </div>
+        <div class="load-card">
+          <div class="load-top">
+            <span>RAM</span>
+            <strong><b id="ramUsed">0</b>/<b id="ramTotal">0</b></strong>
+          </div>
+          <div class="load-sub" id="ramInfo">0% used</div>
+          <canvas id="ramChart" width="420" height="110" aria-label="RAM usage graph"></canvas>
+        </div>
+      </div>
+    </section>
+
     <section class="grid">
       <article class="panel players-panel">
         <div class="panel-head">

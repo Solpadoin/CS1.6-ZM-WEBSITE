@@ -12,6 +12,8 @@ const state = {
   players: [],
   chat: [],
   events: [],
+  system: null,
+  systemHistory: [],
   live: false,
   socket: null,
   reconnectTimer: null,
@@ -67,6 +69,94 @@ function formatTime(value) {
   const date = new Date(value * 1000);
   if (Number.isNaN(date.getTime())) return String(value);
   return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+}
+
+function formatBytes(value) {
+  const bytes = Number(value || 0);
+  const units = ["B", "MB", "GB", "TB"];
+  let size = bytes;
+  let unit = 0;
+
+  while (size >= 1024 && unit < units.length - 1) {
+    size /= 1024;
+    unit += 1;
+  }
+
+  return `${size.toFixed(unit === 0 ? 0 : 1)} ${units[unit]}`;
+}
+
+function pushSystemHistory(system) {
+  if (!system || !system.cpu || !system.memory) return;
+
+  const last = state.systemHistory[state.systemHistory.length - 1];
+  if (last && last.time === system.updated_at) return;
+
+  state.systemHistory.push({
+    time: system.updated_at || Math.floor(Date.now() / 1000),
+    cpu: Number(system.cpu.load_percent || 0),
+    ram: Number(system.memory.used_percent || 0)
+  });
+
+  if (state.systemHistory.length > 90) {
+    state.systemHistory.splice(0, state.systemHistory.length - 90);
+  }
+}
+
+function drawLineChart(canvas, values, color) {
+  if (!canvas) return;
+
+  const rect = canvas.getBoundingClientRect();
+  const width = Math.max(1, Math.floor(rect.width));
+  const height = Math.max(1, Math.floor(rect.height));
+  const ratio = window.devicePixelRatio || 1;
+
+  if (canvas.width !== width * ratio || canvas.height !== height * ratio) {
+    canvas.width = width * ratio;
+    canvas.height = height * ratio;
+  }
+
+  const ctx = canvas.getContext("2d");
+  ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+  ctx.clearRect(0, 0, width, height);
+
+  ctx.strokeStyle = "rgba(255,255,255,0.09)";
+  ctx.lineWidth = 1;
+  for (let i = 1; i < 4; i++) {
+    const y = (height / 4) * i;
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(width, y);
+    ctx.stroke();
+  }
+
+  if (!values.length) return;
+
+  const points = values.map((value, index) => {
+    const x = values.length === 1 ? width : (index / (values.length - 1)) * width;
+    const y = height - (Math.max(0, Math.min(100, value)) / 100) * height;
+    return { x, y };
+  });
+
+  const gradient = ctx.createLinearGradient(0, 0, 0, height);
+  gradient.addColorStop(0, `${color}55`);
+  gradient.addColorStop(1, `${color}00`);
+
+  ctx.beginPath();
+  ctx.moveTo(points[0].x, height);
+  for (const point of points) ctx.lineTo(point.x, point.y);
+  ctx.lineTo(points[points.length - 1].x, height);
+  ctx.closePath();
+  ctx.fillStyle = gradient;
+  ctx.fill();
+
+  ctx.beginPath();
+  points.forEach((point, index) => {
+    if (index === 0) ctx.moveTo(point.x, point.y);
+    else ctx.lineTo(point.x, point.y);
+  });
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2;
+  ctx.stroke();
 }
 
 function mapImageUrl(map) {
@@ -146,23 +236,44 @@ function renderEvents() {
     : `<div class="empty">No events yet.</div>`;
 }
 
+function renderSystem() {
+  const system = state.system || {};
+  const cpu = system.cpu || {};
+  const memory = system.memory || {};
+
+  pushSystemHistory(system);
+
+  $("systemUpdated").textContent = formatTime(system.updated_at);
+  $("cpuUsed").textContent = Number(cpu.load_percent || 0).toFixed(1);
+  $("cpuInfo").textContent = `${cpu.cores || 0} cores / ${cpu.model || "unknown CPU"}`;
+  $("ramUsed").textContent = formatBytes(memory.used_bytes);
+  $("ramTotal").textContent = formatBytes(memory.total_bytes);
+  $("ramInfo").textContent = `${Number(memory.used_percent || 0).toFixed(1)}% used / ${formatBytes(memory.free_bytes)} free`;
+
+  drawLineChart($("cpuChart"), state.systemHistory.map((point) => point.cpu), "#a6ff72");
+  drawLineChart($("ramChart"), state.systemHistory.map((point) => point.ram), "#e6b15a");
+}
+
 async function refresh() {
-  const [status, players, chat, events] = await Promise.all([
+  const [status, players, chat, events, system] = await Promise.all([
     loadJson("server_status", {}),
     loadJson("players", []),
     loadJson("chat", []),
-    loadJson("events", [])
+    loadJson("events", []),
+    loadJson("system", {})
   ]);
 
   state.status = status;
   state.players = Array.isArray(players) ? players : players.players || [];
   state.chat = Array.isArray(chat) ? chat : chat.messages || [];
   state.events = Array.isArray(events) ? events : events.events || [];
+  state.system = system;
 
   renderStatus();
   renderPlayers();
   renderChat();
   renderEvents();
+  renderSystem();
 }
 
 function applySnapshot(snapshot) {
@@ -172,11 +283,13 @@ function applySnapshot(snapshot) {
   state.players = Array.isArray(payload.players) ? payload.players : payload.players?.players || [];
   state.chat = Array.isArray(payload.chat) ? payload.chat : payload.chat?.messages || [];
   state.events = Array.isArray(payload.events) ? payload.events : payload.events?.events || [];
+  state.system = payload.system || {};
 
   renderStatus();
   renderPlayers();
   renderChat();
   renderEvents();
+  renderSystem();
 }
 
 function startPolling() {
