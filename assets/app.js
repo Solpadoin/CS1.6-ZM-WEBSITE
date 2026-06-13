@@ -1,6 +1,8 @@
 const config = Object.assign({
+  liveSocketUrl: "",
   dataBase: "data",
   refreshMs: 10000,
+  reconnectMs: 5000,
   mapImageBase: "https://image.gametracker.com/images/maps/160x120/cs",
   chatWindowMinutes: 30
 }, window.ZM_CONFIG || {});
@@ -9,10 +11,26 @@ const state = {
   status: null,
   players: [],
   chat: [],
-  events: []
+  events: [],
+  live: false,
+  socket: null,
+  reconnectTimer: null,
+  pollingTimer: null
 };
 
 const $ = (id) => document.getElementById(id);
+
+function applyUrlConfig() {
+  const params = new URLSearchParams(window.location.search);
+
+  if (params.has("liveSocketUrl")) {
+    config.liveSocketUrl = params.get("liveSocketUrl");
+  }
+
+  if (params.has("dataBase")) {
+    config.dataBase = params.get("dataBase");
+  }
+}
 
 function esc(value) {
   return String(value ?? "").replace(/[&<>"']/g, (ch) => ({
@@ -63,8 +81,8 @@ function renderStatus() {
   const map = status.map || "unknown";
 
   $("serverName").textContent = status.hostname || "CS 1.6 Zombie Mod";
-  $("serverState").textContent = status.online === false ? "OFFLINE" : "ONLINE";
-  $("serverState").classList.toggle("offline", status.online === false);
+  $("serverState").textContent = status.online === false ? "OFFLINE" : (state.live ? "LIVE" : (config.liveSocketUrl ? "RETRY" : "ONLINE"));
+  $("serverState").classList.toggle("offline", status.online === false || !state.live && Boolean(config.liveSocketUrl));
   $("onlinePlayers").textContent = playersOnline;
   $("maxPlayers").textContent = maxPlayers;
   $("currentMap").textContent = map;
@@ -147,5 +165,88 @@ async function refresh() {
   renderEvents();
 }
 
-refresh();
-setInterval(refresh, config.refreshMs);
+function applySnapshot(snapshot) {
+  const payload = snapshot && snapshot.payload ? snapshot.payload : snapshot || {};
+
+  state.status = payload.status || payload.server_status || {};
+  state.players = Array.isArray(payload.players) ? payload.players : payload.players?.players || [];
+  state.chat = Array.isArray(payload.chat) ? payload.chat : payload.chat?.messages || [];
+  state.events = Array.isArray(payload.events) ? payload.events : payload.events?.events || [];
+
+  renderStatus();
+  renderPlayers();
+  renderChat();
+  renderEvents();
+}
+
+function startPolling() {
+  if (state.pollingTimer) return;
+
+  refresh();
+  state.pollingTimer = setInterval(refresh, config.refreshMs);
+}
+
+function stopPolling() {
+  if (!state.pollingTimer) return;
+
+  clearInterval(state.pollingTimer);
+  state.pollingTimer = null;
+}
+
+function scheduleReconnect() {
+  if (state.reconnectTimer) return;
+
+  state.reconnectTimer = setTimeout(() => {
+    state.reconnectTimer = null;
+    connectLiveSocket();
+  }, config.reconnectMs);
+}
+
+function connectLiveSocket() {
+  if (!config.liveSocketUrl) {
+    startPolling();
+    return;
+  }
+
+  try {
+    state.socket = new WebSocket(config.liveSocketUrl);
+  } catch (error) {
+    state.live = false;
+    renderStatus();
+    startPolling();
+    scheduleReconnect();
+    return;
+  }
+
+  state.socket.addEventListener("open", () => {
+    state.live = true;
+    stopPolling();
+    renderStatus();
+  });
+
+  state.socket.addEventListener("message", (event) => {
+    try {
+      const message = JSON.parse(event.data);
+      if (message.type === "snapshot" || !message.type) {
+        applySnapshot(message);
+      }
+    } catch (error) {
+      console.warn("Bad live payload", error);
+    }
+  });
+
+  state.socket.addEventListener("close", () => {
+    state.live = false;
+    renderStatus();
+    startPolling();
+    scheduleReconnect();
+  });
+
+  state.socket.addEventListener("error", () => {
+    state.live = false;
+    renderStatus();
+  });
+}
+
+applyUrlConfig();
+connectLiveSocket();
