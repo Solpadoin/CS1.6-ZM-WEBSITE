@@ -12,6 +12,7 @@ const dataDir = path.resolve(
     path.join(__dirname, "..", "data")
 );
 const pollMs = Number(process.env.ZM_WEB_POLL_MS || 1000);
+const maxWsClients = Number(process.env.ZM_WEB_MAX_WS_CLIENTS || 5);
 
 const files = {
   status: "server_status.json",
@@ -132,11 +133,27 @@ function sendWebSocketText(socket, text) {
   }
 }
 
+function rejectUpgrade(socket, statusCode, message) {
+  socket.write([
+    `HTTP/1.1 ${statusCode} ${message}`,
+    "Connection: close",
+    "Content-Length: 0",
+    "",
+    ""
+  ].join("\r\n"));
+  socket.destroy();
+}
+
 server.on("upgrade", (request, socket) => {
   const requestUrl = new URL(request.url, `http://${request.headers.host || "localhost"}`);
 
   if (requestUrl.pathname !== "/ws") {
     socket.destroy();
+    return;
+  }
+
+  if (maxWsClients >= 0 && clients.size >= maxWsClients) {
+    rejectUpgrade(socket, 503, "Service Unavailable");
     return;
   }
 
@@ -185,4 +202,5 @@ server.listen(port, host, () => {
   console.log(`ZM live backend listening on ${host}:${port}`);
   console.log(`Reading AMXX JSON from: ${dataDir}`);
   console.log(`WebSocket path: /ws`);
+  console.log(`Max WebSocket clients: ${maxWsClients}`);
 });

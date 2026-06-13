@@ -17,6 +17,7 @@ cd backend
 ```powershell
 $env:ZM_WEB_DATA_DIR="C:\Path\To\hlds\cstrike\addons\amxmodx\data\zm_web"
 $env:ZM_WEB_PORT="8080"
+$env:ZM_WEB_MAX_WS_CLIENTS="5"
 node server.js
 ```
 
@@ -46,6 +47,7 @@ Then set `liveSocketUrl` in `config.js`.
 - `ZM_WEB_HOST`: bind host, default `0.0.0.0`.
 - `ZM_WEB_PORT`: bind port, default `8080`.
 - `ZM_WEB_POLL_MS`: file polling interval, default `1000`.
+- `ZM_WEB_MAX_WS_CLIENTS`: maximum simultaneous WebSocket clients, default `5`. Set `-1` to disable the limit.
 
 ## HTTP Fallback
 
