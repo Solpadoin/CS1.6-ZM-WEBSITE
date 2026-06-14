@@ -11,6 +11,7 @@ https://solpadoin.github.io/CS1.6-ZM-WEBSITE/
 - Online/max players
 - Player list
 - Chat from the last 30 minutes
+- Unique joined players per day and per week
 - Recent server events
 - Map preview from GameTracker map images, with a built-in `NO IMAGE` fallback
 
@@ -51,6 +52,7 @@ If `liveSocketUrl` is empty, the site polls:
 - `data/players.json`
 - `data/chat.json`
 - `data/events.json`
+- `data/unique_players.json`
 
 If live data is missing, it falls back to `data/sample/*.json`.
 
@@ -73,6 +75,14 @@ The plugin writes JSON to:
 ```text
 addons/amxmodx/data/zm_web
 ```
+
+It also appends real player joins to:
+
+```text
+addons/amxmodx/data/zm_web/unique_players.log
+```
+
+The backend counts unique players by `SteamID + nickname` and writes `unique_players.json` for fallback sync.
 
 ## Live Backend
 

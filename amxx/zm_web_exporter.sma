@@ -8,6 +8,7 @@
 #define EXPORT_TASK 74001
 #define MAX_CHAT_LINES 128
 #define MAX_EVENTS 96
+#define UNIQUE_LOG_FILE "unique_players.log"
 
 enum ChatLine
 {
@@ -72,6 +73,7 @@ public client_putinserver(id)
 	new name[32];
 	get_user_name(id, name, charsmax(name));
 	add_event_line("client_connected", name);
+	log_unique_player(id);
 	export_all();
 }
 
@@ -180,6 +182,39 @@ ensure_export_dir()
 build_path(const fileName[], output[], outputLen)
 {
 	formatex(output, outputLen, "%s/%s", g_exportDir, fileName);
+}
+
+log_unique_player(id)
+{
+	if (is_user_bot(id))
+		return;
+
+	new path[192], name[32], authid[40], cleanName[64], cleanAuth[64];
+	build_path(UNIQUE_LOG_FILE, path, charsmax(path));
+
+	get_user_name(id, name, charsmax(name));
+	get_user_authid(id, authid, charsmax(authid));
+	json_clean(name, cleanName, charsmax(cleanName));
+	json_clean(authid, cleanAuth, charsmax(cleanAuth));
+
+	for (new i = 0; cleanName[i]; i++)
+	{
+		if (cleanName[i] == 9)
+			cleanName[i] = 32;
+	}
+
+	for (new i = 0; cleanAuth[i]; i++)
+	{
+		if (cleanAuth[i] == 9)
+			cleanAuth[i] = 32;
+	}
+
+	new fp = fopen(path, "at");
+	if (!fp)
+		return;
+
+	fprintf(fp, "%d^t%s^t%s^n", get_systime(), cleanAuth, cleanName);
+	fclose(fp);
 }
 
 json_clean(const input[], output[], outputLen)

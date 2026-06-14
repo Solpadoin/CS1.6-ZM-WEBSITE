@@ -12,6 +12,7 @@ const state = {
   players: [],
   chat: [],
   events: [],
+  uniquePlayers: null,
   system: null,
   systemHistory: [],
   live: false,
@@ -159,6 +160,68 @@ function drawLineChart(canvas, values, color) {
   ctx.stroke();
 }
 
+function drawBarChart(canvas, rows, color) {
+  if (!canvas) return;
+
+  const rect = canvas.getBoundingClientRect();
+  const width = Math.max(1, Math.floor(rect.width));
+  const height = Math.max(1, Math.floor(rect.height));
+  const ratio = window.devicePixelRatio || 1;
+
+  if (canvas.width !== width * ratio || canvas.height !== height * ratio) {
+    canvas.width = width * ratio;
+    canvas.height = height * ratio;
+  }
+
+  const ctx = canvas.getContext("2d");
+  ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+  ctx.clearRect(0, 0, width, height);
+
+  ctx.strokeStyle = "rgba(255,255,255,0.09)";
+  ctx.lineWidth = 1;
+  for (let i = 1; i < 4; i++) {
+    const y = (height / 4) * i;
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(width, y);
+    ctx.stroke();
+  }
+
+  const data = Array.isArray(rows) ? rows.filter((row) => Number(row.count) >= 0) : [];
+  if (!data.length) return;
+
+  const padding = 18;
+  const labelHeight = 26;
+  const chartHeight = Math.max(1, height - padding - labelHeight);
+  const max = Math.max(1, ...data.map((row) => Number(row.count || 0)));
+  const gap = Math.max(4, Math.min(10, width / 70));
+  const barWidth = Math.max(5, (width - padding * 2 - gap * (data.length - 1)) / data.length);
+
+  ctx.fillStyle = "rgba(255,255,255,0.16)";
+  ctx.font = "11px Arial, Helvetica, sans-serif";
+  ctx.textAlign = "center";
+
+  data.forEach((row, index) => {
+    const value = Number(row.count || 0);
+    const x = padding + index * (barWidth + gap);
+    const barHeight = Math.max(2, (value / max) * (chartHeight - 10));
+    const y = chartHeight - barHeight;
+
+    const gradient = ctx.createLinearGradient(0, y, 0, chartHeight);
+    gradient.addColorStop(0, color);
+    gradient.addColorStop(1, `${color}55`);
+    ctx.fillStyle = gradient;
+    ctx.fillRect(x, y, barWidth, barHeight);
+
+    ctx.fillStyle = "rgba(232,234,217,0.9)";
+    ctx.fillText(String(value), x + barWidth / 2, Math.max(12, y - 5));
+
+    const label = String(row.label || "").replace(/^\d{4}-/, "");
+    ctx.fillStyle = "rgba(155,164,141,0.85)";
+    ctx.fillText(label, x + barWidth / 2, height - 8);
+  });
+}
+
 function mapImageUrl(map) {
   const safeMap = encodeURIComponent(map || "unknown");
   return `${config.mapImageBase.replace(/\/$/, "")}/${safeMap}.jpg`;
@@ -261,12 +324,28 @@ function renderSystem() {
   drawLineChart($("ramChart"), state.systemHistory.map((point) => point.ram), "#e6b15a");
 }
 
+function renderUniquePlayers() {
+  const stats = state.uniquePlayers || {};
+  const perDay = Array.isArray(stats.per_day) ? stats.per_day : [];
+  const perWeek = Array.isArray(stats.per_week) ? stats.per_week : [];
+  const dayTotal = perDay.reduce((sum, row) => sum + Number(row.count || 0), 0);
+  const weekTotal = perWeek.reduce((sum, row) => sum + Number(row.count || 0), 0);
+
+  $("uniquePlayersTotal").textContent = `${Number(stats.total || 0)} total`;
+  $("uniquePlayersDayCount").textContent = dayTotal;
+  $("uniquePlayersWeekCount").textContent = weekTotal;
+
+  drawBarChart($("uniquePlayersDayChart"), perDay, "#a6ff72");
+  drawBarChart($("uniquePlayersWeekChart"), perWeek, "#e6b15a");
+}
+
 async function refresh() {
-  const [status, players, chat, events, system] = await Promise.all([
+  const [status, players, chat, events, uniquePlayers, system] = await Promise.all([
     loadJson("server_status", {}),
     loadJson("players", []),
     loadJson("chat", []),
     loadJson("events", []),
+    loadJson("unique_players", {}),
     loadJson("system", {})
   ]);
 
@@ -274,12 +353,14 @@ async function refresh() {
   state.players = Array.isArray(players) ? players : players.players || [];
   state.chat = Array.isArray(chat) ? chat : chat.messages || [];
   state.events = Array.isArray(events) ? events : events.events || [];
+  state.uniquePlayers = uniquePlayers && Object.keys(uniquePlayers).length ? uniquePlayers : status.unique_players || {};
   state.system = system;
 
   renderStatus();
   renderPlayers();
   renderChat();
   renderEvents();
+  renderUniquePlayers();
   renderSystem();
 }
 
@@ -290,12 +371,14 @@ function applySnapshot(snapshot) {
   state.players = Array.isArray(payload.players) ? payload.players : payload.players?.players || [];
   state.chat = Array.isArray(payload.chat) ? payload.chat : payload.chat?.messages || [];
   state.events = Array.isArray(payload.events) ? payload.events : payload.events?.events || [];
+  state.uniquePlayers = payload.unique_players || {};
   state.system = payload.system || {};
 
   renderStatus();
   renderPlayers();
   renderChat();
   renderEvents();
+  renderUniquePlayers();
   renderSystem();
 }
 

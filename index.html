@@ -93,6 +93,29 @@
       </article>
     </section>
 
+    <section class="panel unique-panel">
+      <div class="panel-head">
+        <h2>Unique Players Joined</h2>
+        <span id="uniquePlayersTotal">0 total</span>
+      </div>
+      <div class="unique-grid">
+        <div class="unique-card">
+          <div class="load-top">
+            <span>Per Day</span>
+            <strong><b id="uniquePlayersDayCount">0</b></strong>
+          </div>
+          <canvas id="uniquePlayersDayChart" width="420" height="420" aria-label="Unique players per day graph"></canvas>
+        </div>
+        <div class="unique-card">
+          <div class="load-top">
+            <span>Per Week</span>
+            <strong><b id="uniquePlayersWeekCount">0</b></strong>
+          </div>
+          <canvas id="uniquePlayersWeekChart" width="420" height="420" aria-label="Unique players per week graph"></canvas>
+        </div>
+      </div>
+    </section>
+
     <section class="panel events-panel">
       <div class="panel-head">
         <h2>Server Events</h2>

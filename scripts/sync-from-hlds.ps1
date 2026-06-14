@@ -16,8 +16,9 @@ Copy-Item -LiteralPath (Join-Path $Source "server_status.json") -Destination $da
 Copy-Item -LiteralPath (Join-Path $Source "players.json") -Destination $dataDir -Force
 Copy-Item -LiteralPath (Join-Path $Source "chat.json") -Destination $dataDir -Force
 Copy-Item -LiteralPath (Join-Path $Source "events.json") -Destination $dataDir -Force
+Copy-Item -LiteralPath (Join-Path $Source "unique_players.json") -Destination $dataDir -Force
 
-git -C $repo add data/server_status.json data/players.json data/chat.json data/events.json
+git -C $repo add data/server_status.json data/players.json data/chat.json data/events.json data/unique_players.json
 
 $changes = git -C $repo status --porcelain
 if ($changes) {

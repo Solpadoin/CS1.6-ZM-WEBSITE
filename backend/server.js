@@ -20,7 +20,9 @@ const files = {
   players: "players.json",
   chat: "chat.json",
   events: "events.json",
-  system: "system.json"
+  system: "system.json",
+  uniquePlayers: "unique_players.json",
+  uniquePlayersLog: "unique_players.log"
 };
 
 let lastSignature = "";
@@ -40,14 +42,78 @@ function readJson(file, fallback) {
 
 function readSnapshot() {
   const system = readSystemSnapshot();
+  const uniquePlayers = readUniquePlayersStats();
   writeSystemSnapshot(system);
+  writeJsonSnapshot(files.uniquePlayers, uniquePlayers);
 
   return {
     status: readJson(files.status, { online: false, updated_at: Math.floor(Date.now() / 1000) }),
     players: readJson(files.players, []),
     chat: readJson(files.chat, []),
     events: readJson(files.events, []),
+    unique_players: uniquePlayers,
     system
+  };
+}
+
+function dayKey(date) {
+  return date.toISOString().slice(0, 10);
+}
+
+function weekKey(date) {
+  const utcDate = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+  const day = utcDate.getUTCDay() || 7;
+  utcDate.setUTCDate(utcDate.getUTCDate() + 4 - day);
+  const yearStart = new Date(Date.UTC(utcDate.getUTCFullYear(), 0, 1));
+  const week = Math.ceil((((utcDate - yearStart) / 86400000) + 1) / 7);
+  return `${utcDate.getUTCFullYear()}-W${String(week).padStart(2, "0")}`;
+}
+
+function addUnique(bucket, label, key) {
+  if (!bucket.has(label)) bucket.set(label, new Set());
+  bucket.get(label).add(key);
+}
+
+function mapBucket(bucket) {
+  return [...bucket.entries()]
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([label, values]) => ({ label, count: values.size }));
+}
+
+function readUniquePlayersStats() {
+  const fullPath = path.join(dataDir, files.uniquePlayersLog);
+  const perDay = new Map();
+  const perWeek = new Map();
+  const seenAll = new Set();
+
+  try {
+    const raw = fs.readFileSync(fullPath, "utf8");
+    for (const line of raw.split(/\r?\n/)) {
+      if (!line.trim()) continue;
+
+      const [timeRaw, authidRaw, ...nameParts] = line.split("\t");
+      const time = Number(timeRaw);
+      const authid = String(authidRaw || "").trim();
+      const name = nameParts.join("\t").trim();
+
+      if (!time || !authid || !name) continue;
+
+      const date = new Date(time * 1000);
+      if (Number.isNaN(date.getTime())) continue;
+
+      const key = `${authid.toLowerCase()}|${name.toLowerCase()}`;
+      seenAll.add(key);
+      addUnique(perDay, dayKey(date), key);
+      addUnique(perWeek, weekKey(date), key);
+    }
+  } catch (error) {
+    return { total: 0, per_day: [], per_week: [] };
+  }
+
+  return {
+    total: seenAll.size,
+    per_day: mapBucket(perDay).slice(-14),
+    per_week: mapBucket(perWeek).slice(-12)
   };
 }
 
@@ -116,9 +182,13 @@ function readSystemSnapshot() {
 }
 
 function writeSystemSnapshot(system) {
+  writeJsonSnapshot(files.system, system);
+}
+
+function writeJsonSnapshot(file, payload) {
   try {
     fs.mkdirSync(dataDir, { recursive: true });
-    fs.writeFileSync(path.join(dataDir, files.system), JSON.stringify(system, null, 2));
+    fs.writeFileSync(path.join(dataDir, file), JSON.stringify(payload, null, 2));
   } catch (error) {
     // The live snapshot still works even if the fallback file cannot be written.
   }

@@ -1,0 +1,18 @@
+{
+  "total": 42,
+  "per_day": [
+    { "label": "2026-06-08", "count": 4 },
+    { "label": "2026-06-09", "count": 7 },
+    { "label": "2026-06-10", "count": 5 },
+    { "label": "2026-06-11", "count": 11 },
+    { "label": "2026-06-12", "count": 9 },
+    { "label": "2026-06-13", "count": 13 },
+    { "label": "2026-06-14", "count": 8 }
+  ],
+  "per_week": [
+    { "label": "2026-W21", "count": 12 },
+    { "label": "2026-W22", "count": 19 },
+    { "label": "2026-W23", "count": 27 },
+    { "label": "2026-W24", "count": 42 }
+  ]
+}
