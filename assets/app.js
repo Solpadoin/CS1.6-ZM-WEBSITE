@@ -271,7 +271,7 @@ function renderPlayers() {
           <div class="player-name">${esc(player.name)}</div>
           <div class="chat-meta">${esc(teamName(player.team))}${player.alive ? " / alive" : " / dead"}</div>
         </div>
-        <span class="tag ${player.bot ? "bot" : ""}">${player.bot ? "FPlayer" : "PLAYER"}</span>
+        <span class="tag ${player.bot ? "bot" : ""}">${player.bot ? "BOT" : "PLAYER"}</span>
       </div>
     `).join("")
     : `<div class="empty">No players online.</div>`;
