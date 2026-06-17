@@ -88,7 +88,7 @@ function formatDateTime(value) {
 
 function displayServerAddress(address) {
   const value = String(address || "").trim();
-  if (!value || value.startsWith("0.0.0.0:")) return "IP: configure";
+  if (!value || value.startsWith("0.0.0.0:")) return "IP: unavailable";
   return `IP: ${value}`;
 }
 
