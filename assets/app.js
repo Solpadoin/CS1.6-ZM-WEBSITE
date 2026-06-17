@@ -1,5 +1,6 @@
 const config = Object.assign({
   liveSocketUrl: "",
+  serverAddress: "",
   dataBase: "data",
   refreshMs: 10000,
   reconnectMs: 5000,
@@ -253,7 +254,7 @@ function renderStatus() {
   const map = status.map || "unknown";
 
   $("serverName").textContent = status.hostname || "CS 1.6 Zombie Mod";
-  $("serverAddress").textContent = displayServerAddress(status.address);
+  $("serverAddress").textContent = displayServerAddress(config.serverAddress || status.address);
   $("serverState").textContent = status.online === false ? "OFFLINE" : (state.live ? "LIVE" : (config.liveSocketUrl ? "RETRY" : "ONLINE"));
   $("serverState").classList.toggle("offline", status.online === false || !state.live && Boolean(config.liveSocketUrl));
   $("onlinePlayers").textContent = playersOnline;

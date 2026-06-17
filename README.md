@@ -30,6 +30,7 @@ Set `liveSocketUrl` in `config.js`:
 ```js
 window.ZM_CONFIG = {
   liveSocketUrl: "wss://your-domain.example/ws",
+  serverAddress: "your.public.ip:27015",
   dataBase: "data",
   refreshMs: 10000,
   reconnectMs: 5000,
@@ -78,10 +79,10 @@ The plugin writes JSON to:
 addons/amxmodx/data/zm_web
 ```
 
-Set the public server address shown on the website in `server.cfg`:
+Set the public server address shown on the website in `config.js`:
 
-```text
-zm_web_server_address "your.public.ip:27015"
+```js
+serverAddress: "your.public.ip:27015"
 ```
 
 It also appends real player joins to:
