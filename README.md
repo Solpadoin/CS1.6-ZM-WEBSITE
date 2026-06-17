@@ -78,6 +78,12 @@ The plugin writes JSON to:
 addons/amxmodx/data/zm_web
 ```
 
+Set the public server address shown on the website in `server.cfg`:
+
+```text
+zm_web_server_address "your.public.ip:27015"
+```
+
 It also appends real player joins to:
 
 ```text

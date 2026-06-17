@@ -33,6 +33,7 @@ new g_eventCount;
 
 new g_roundState[32] = "waiting";
 new g_exportDir[128] = "addons/amxmodx/data/zm_web";
+new g_serverAddress[64] = "";
 new g_chatWindowSeconds = 1800;
 new g_exportInterval = 5;
 
@@ -41,6 +42,7 @@ public plugin_init()
 	register_plugin(PLUGIN_NAME, PLUGIN_VERSION, PLUGIN_AUTHOR);
 
 	register_cvar("zm_web_export_dir", g_exportDir);
+	register_cvar("zm_web_server_address", "");
 	register_cvar("zm_web_chat_window", "1800");
 	register_cvar("zm_web_export_interval", "5");
 
@@ -57,6 +59,7 @@ public plugin_init()
 public plugin_cfg()
 {
 	get_cvar_string("zm_web_export_dir", g_exportDir, charsmax(g_exportDir));
+	get_cvar_string("zm_web_server_address", g_serverAddress, charsmax(g_serverAddress));
 	g_chatWindowSeconds = max(60, get_cvar_num("zm_web_chat_window"));
 	g_exportInterval = max(2, get_cvar_num("zm_web_export_interval"));
 
@@ -291,9 +294,18 @@ export_status()
 get_server_address(output[], outputLen)
 {
 	new address[64], ip[32], port[16];
+	get_cvar_string("zm_web_server_address", g_serverAddress, charsmax(g_serverAddress));
+	trim(g_serverAddress);
+
+	if (g_serverAddress[0])
+	{
+		copy(output, outputLen, g_serverAddress);
+		return;
+	}
+
 	get_cvar_string("net_address", address, charsmax(address));
 
-	if (address[0] && !equali(address, "0.0.0.0:0"))
+	if (address[0] && containi(address, "0.0.0.0:") != 0)
 	{
 		copy(output, outputLen, address);
 		return;
@@ -303,7 +315,10 @@ get_server_address(output[], outputLen)
 	get_cvar_string("hostport", port, charsmax(port));
 
 	if (!ip[0] || equali(ip, "0.0.0.0"))
-		copy(ip, charsmax(ip), "127.0.0.1");
+	{
+		copy(output, outputLen, "");
+		return;
+	}
 
 	if (!port[0])
 		copy(port, charsmax(port), "27015");

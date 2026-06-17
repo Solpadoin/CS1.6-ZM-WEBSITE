@@ -85,6 +85,12 @@ function formatDateTime(value) {
   });
 }
 
+function displayServerAddress(address) {
+  const value = String(address || "").trim();
+  if (!value || value.startsWith("0.0.0.0:")) return "IP: configure";
+  return `IP: ${value}`;
+}
+
 function formatBytes(value) {
   const bytes = Number(value || 0);
   const units = ["B", "KB", "MB", "GB", "TB"];
@@ -247,7 +253,7 @@ function renderStatus() {
   const map = status.map || "unknown";
 
   $("serverName").textContent = status.hostname || "CS 1.6 Zombie Mod";
-  $("serverAddress").textContent = status.address ? `IP: ${status.address}` : "IP: unknown";
+  $("serverAddress").textContent = displayServerAddress(status.address);
   $("serverState").textContent = status.online === false ? "OFFLINE" : (state.live ? "LIVE" : (config.liveSocketUrl ? "RETRY" : "ONLINE"));
   $("serverState").classList.toggle("offline", status.online === false || !state.live && Boolean(config.liveSocketUrl));
   $("onlinePlayers").textContent = playersOnline;
