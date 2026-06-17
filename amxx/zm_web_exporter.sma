@@ -264,11 +264,13 @@ export_status()
 	if (!fp)
 		return;
 
-	new hostname[96], map[48], cleanHost[128], cleanMap[64];
+	new hostname[96], map[48], serverAddress[64], cleanHost[128], cleanMap[64], cleanAddress[96];
 	get_cvar_string("hostname", hostname, charsmax(hostname));
 	get_mapname(map, charsmax(map));
+	get_server_address(serverAddress, charsmax(serverAddress));
 	json_clean(hostname, cleanHost, charsmax(cleanHost));
 	json_clean(map, cleanMap, charsmax(cleanMap));
+	json_clean(serverAddress, cleanAddress, charsmax(cleanAddress));
 
 	new players[32], playerCount;
 	get_players(players, playerCount, "h");
@@ -276,6 +278,7 @@ export_status()
 	fprintf(fp, "{^n");
 	fprintf(fp, "  ^"online^": true,^n");
 	fprintf(fp, "  ^"hostname^": ^"%s^",^n", cleanHost);
+	fprintf(fp, "  ^"address^": ^"%s^",^n", cleanAddress);
 	fprintf(fp, "  ^"map^": ^"%s^",^n", cleanMap);
 	fprintf(fp, "  ^"players_online^": %d,^n", playerCount);
 	fprintf(fp, "  ^"players_max^": %d,^n", get_maxplayers());
@@ -283,6 +286,29 @@ export_status()
 	fprintf(fp, "  ^"updated_at^": %d^n", get_systime());
 	fprintf(fp, "}^n");
 	fclose(fp);
+}
+
+get_server_address(output[], outputLen)
+{
+	new address[64], ip[32], port[16];
+	get_cvar_string("net_address", address, charsmax(address));
+
+	if (address[0] && !equali(address, "0.0.0.0:0"))
+	{
+		copy(output, outputLen, address);
+		return;
+	}
+
+	get_cvar_string("ip", ip, charsmax(ip));
+	get_cvar_string("hostport", port, charsmax(port));
+
+	if (!ip[0] || equali(ip, "0.0.0.0"))
+		copy(ip, charsmax(ip), "127.0.0.1");
+
+	if (!port[0])
+		copy(port, charsmax(port), "27015");
+
+	formatex(output, outputLen, "%s:%s", ip, port);
 }
 
 export_players()

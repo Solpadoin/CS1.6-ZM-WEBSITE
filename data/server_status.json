@@ -1,6 +1,7 @@
 {
   "online": false,
   "hostname": "CS 1.6 Zombie Mod",
+  "address": "127.0.0.1:27015",
   "map": "unknown",
   "players_online": 0,
   "players_max": 32,

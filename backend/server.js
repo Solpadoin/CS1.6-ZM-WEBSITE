@@ -85,6 +85,7 @@ function readUniquePlayersStats() {
   const perDay = new Map();
   const perWeek = new Map();
   const seenAll = new Set();
+  const players = new Map();
 
   try {
     const raw = fs.readFileSync(fullPath, "utf8");
@@ -105,15 +106,33 @@ function readUniquePlayersStats() {
       seenAll.add(key);
       addUnique(perDay, dayKey(date), key);
       addUnique(perWeek, weekKey(date), key);
+
+      const existing = players.get(key) || {
+        name,
+        authid,
+        first_seen: time,
+        last_seen: time,
+        joins: 0
+      };
+
+      existing.name = name;
+      existing.authid = authid;
+      existing.first_seen = Math.min(existing.first_seen, time);
+      existing.last_seen = Math.max(existing.last_seen, time);
+      existing.joins += 1;
+      players.set(key, existing);
     }
   } catch (error) {
-    return { total: 0, per_day: [], per_week: [] };
+    return { total: 0, per_day: [], per_week: [], players: [] };
   }
 
   return {
     total: seenAll.size,
     per_day: mapBucket(perDay).slice(-14),
-    per_week: mapBucket(perWeek).slice(-12)
+    per_week: mapBucket(perWeek).slice(-12),
+    players: [...players.values()]
+      .sort((left, right) => right.last_seen - left.last_seen || left.name.localeCompare(right.name))
+      .slice(0, 200)
   };
 }
 

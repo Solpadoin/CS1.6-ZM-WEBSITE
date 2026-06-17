@@ -7,11 +7,13 @@ https://solpadoin.github.io/CS1.6-ZM-WEBSITE/
 ## What It Shows
 
 - Server name
+- Server IP/address
 - Current map
 - Online/max players
 - Player list
 - Chat from the last 30 minutes
 - Unique joined players per day and per week
+- Players that have joined the server, with last seen and join count
 - Recent server events
 - Map preview from GameTracker map images, with a built-in `NO IMAGE` fallback
 
@@ -82,7 +84,7 @@ It also appends real player joins to:
 addons/amxmodx/data/zm_web/unique_players.log
 ```
 
-The backend counts unique players by `SteamID + nickname` and writes `unique_players.json` for fallback sync.
+The plugin also exports `address` in `server_status.json`. The backend counts unique players by `SteamID + nickname` and writes `unique_players.json` for fallback sync, including a recent player history list.
 
 ## Live Backend
 

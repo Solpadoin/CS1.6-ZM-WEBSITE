@@ -18,7 +18,10 @@
         <p class="eyebrow">Counter-Strike 1.6 / Zombie Mod</p>
         <h1 id="serverName">Loading server...</h1>
       </div>
-      <div class="status-pill" id="serverState">SYNC</div>
+      <div class="top-actions">
+        <div class="server-address" id="serverAddress">IP: sync</div>
+        <div class="status-pill" id="serverState">SYNC</div>
+      </div>
     </header>
 
     <section class="hero status-map-panel">
@@ -52,7 +55,7 @@
 
     <section class="panel monitor-panel">
       <div class="panel-head">
-        <h2>Server Load</h2>
+        <h2>Server Load Graphic</h2>
         <span id="systemUpdated">never</span>
       </div>
       <div class="monitor-grid">
@@ -113,6 +116,13 @@
           </div>
           <canvas id="uniquePlayersWeekChart" width="420" height="420" aria-label="Unique players per week graph"></canvas>
         </div>
+      </div>
+      <div class="visited-block">
+        <div class="visited-head">
+          <h3>Players History</h3>
+          <span id="visitedPlayersCount">0 players</span>
+        </div>
+        <div class="visited-list" id="visitedPlayersList"></div>
       </div>
     </section>
 

@@ -72,6 +72,19 @@ function formatTime(value) {
   return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
 
+function formatDateTime(value) {
+  if (!value) return "never";
+  const date = new Date(value * 1000);
+  if (Number.isNaN(date.getTime())) return String(value);
+  return date.toLocaleString([], {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+}
+
 function formatBytes(value) {
   const bytes = Number(value || 0);
   const units = ["B", "KB", "MB", "GB", "TB"];
@@ -234,6 +247,7 @@ function renderStatus() {
   const map = status.map || "unknown";
 
   $("serverName").textContent = status.hostname || "CS 1.6 Zombie Mod";
+  $("serverAddress").textContent = status.address ? `IP: ${status.address}` : "IP: unknown";
   $("serverState").textContent = status.online === false ? "OFFLINE" : (state.live ? "LIVE" : (config.liveSocketUrl ? "RETRY" : "ONLINE"));
   $("serverState").classList.toggle("offline", status.online === false || !state.live && Boolean(config.liveSocketUrl));
   $("onlinePlayers").textContent = playersOnline;
@@ -328,12 +342,28 @@ function renderUniquePlayers() {
   const stats = state.uniquePlayers || {};
   const perDay = Array.isArray(stats.per_day) ? stats.per_day : [];
   const perWeek = Array.isArray(stats.per_week) ? stats.per_week : [];
+  const visitedPlayers = Array.isArray(stats.players) ? stats.players : [];
   const dayTotal = perDay.reduce((sum, row) => sum + Number(row.count || 0), 0);
   const weekTotal = perWeek.reduce((sum, row) => sum + Number(row.count || 0), 0);
 
   $("uniquePlayersTotal").textContent = `${Number(stats.total || 0)} total`;
   $("uniquePlayersDayCount").textContent = dayTotal;
   $("uniquePlayersWeekCount").textContent = weekTotal;
+  $("visitedPlayersCount").textContent = `${visitedPlayers.length} players`;
+  $("visitedPlayersList").innerHTML = visitedPlayers.length
+    ? visitedPlayers.slice(0, 80).map((player) => `
+      <div class="visited-player">
+        <div>
+          <div class="player-name">${esc(player.name)}</div>
+          <div class="chat-meta">${esc(player.authid || "unknown")}</div>
+        </div>
+        <div class="visited-meta">
+          <strong>${Number(player.joins || 0)}</strong>
+          <span>last ${formatDateTime(player.last_seen)}</span>
+        </div>
+      </div>
+    `).join("")
+    : `<div class="empty">No player history yet.</div>`;
 
   drawBarChart($("uniquePlayersDayChart"), perDay, "#a6ff72");
   drawBarChart($("uniquePlayersWeekChart"), perWeek, "#e6b15a");

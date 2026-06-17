@@ -14,5 +14,28 @@
     { "label": "2026-W22", "count": 19 },
     { "label": "2026-W23", "count": 27 },
     { "label": "2026-W24", "count": 42 }
+  ],
+  "players": [
+    {
+      "name": "Solpadoin",
+      "authid": "STEAM_0:1:12345",
+      "first_seen": 1781071200,
+      "last_seen": 1781330400,
+      "joins": 9
+    },
+    {
+      "name": "ZM Hunter",
+      "authid": "STEAM_0:0:67890",
+      "first_seen": 1781157600,
+      "last_seen": 1781326800,
+      "joins": 4
+    },
+    {
+      "name": "Resident",
+      "authid": "VALVE_0:4:112233",
+      "first_seen": 1781244000,
+      "last_seen": 1781323200,
+      "joins": 2
+    }
   ]
 }

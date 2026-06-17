@@ -1,6 +1,7 @@
 {
   "online": true,
   "hostname": "Solpadoin ZM 4.3",
+  "address": "127.0.0.1:27015",
   "map": "zm_2day_2",
   "players_online": 7,
   "players_max": 32,
